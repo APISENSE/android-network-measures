@@ -5,14 +5,34 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.0'
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+        classpath 'com.android.tools.build:gradle:2.2.3'
     }
 }
 
+apply from: 'nexusConfig.gradle'
+
+ext.commonLicense = {
+    name 'Apache License, Version 2.0'
+    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+}
+
+ext.devs = [
+        {
+            id 'aveuiller'
+            name 'Antoine Veuiller'
+            email 'aveuiller@gmail.com'
+        },
+        {
+            id 'avastel'
+            name 'Antoine Vastel'
+            email 'antoine.vastel@gmail.com'
+        }
+]
+
 allprojects {
+    version = "1.0.0-SNAPSHOT"
+    group = 'io.apisense.network'
+
     repositories {
         jcenter()
     }

@@ -6,9 +6,8 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 100
-        versionName "1.0.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        versionCode computeVersionCode()
+        versionName version
     }
     buildTypes {
         release {
@@ -18,8 +17,73 @@ android {
     }
 }
 
+private int computeVersionCode() {
+    def (major, minor, fix) = version.tokenize(".")
+    fix = fix.tokenize("-")[0] // Remove snapshot if present
+    return (major as Integer) * 100 + (minor as Integer) * 10 + (fix as Integer)
+}
+
 dependencies {
-    compile 'com.android.support:appcompat-v7:25.0.1'
+    compile 'com.android.support:appcompat-v7:25.1.0'
+
+    compile 'dnsjava:dnsjava:2.1.7'
     compile 'com.google.code.gson:gson:2.8.0'
     testCompile 'junit:junit:4.12'
+}
+
+task("javadoc", type: Javadoc) {
+    title = 'javadoc'
+    description = 'Generate the project documentation'
+    source = android.sourceSets.main.java.srcDirs
+    classpath = project.files(android.getBootClasspath().join(File.pathSeparator))
+    options {
+        links "http://docs.oracle.com/javase/7/docs/api/"
+        linksOffline "http://d.android.com/reference", "${android.sdkDirectory}/docs/reference"
+    }
+    exclude '**/BuildConfig.java'
+    exclude '**/R.java'
+}
+
+afterEvaluate {
+    javadoc.classpath += files(android.libraryVariants.collect { variant ->
+        variant.javaCompile.classpath.files
+    })
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+uploadArchives {
+    repositories.mavenDeployer {
+        pom.project {
+            name 'Android Network Measures'
+            artifactId 'android-network-measures'
+            packaging 'aar'
+            description 'Provide network QoS & QoE measurement tools for Android.'
+
+            scm {
+                connection 'scm:git:https://github.com/APISENSE/android-network-measures.git'
+                developerConnection 'scm:git:https://github.com/APISENSE/android-network-measures'
+                url 'https://github.com/APISENSE/android-network-measures'
+            }
+
+            licenses {
+                license commonLicense
+            }
+            developers {
+                devs.collect({ developer it })
+            }
+        }
+    }
 }
