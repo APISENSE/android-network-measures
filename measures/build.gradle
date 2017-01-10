@@ -74,6 +74,8 @@ uploadArchives {
             packaging 'aar'
             description 'Provide network QoS & QoE measurement tools for Android.'
 
+            url siteUrl
+
             scm {
                 connection 'scm:git:https://github.com/APISENSE/android-network-measures.git'
                 developerConnection 'scm:git:https://github.com/APISENSE/android-network-measures'

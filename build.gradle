@@ -11,6 +11,8 @@ buildscript {
 
 apply from: 'nexusConfig.gradle'
 
+ext.siteUrl = "https://github.com/APISENSE/android-network-measures"
+
 ext.commonLicense = {
     name 'Apache License, Version 2.0'
     url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
