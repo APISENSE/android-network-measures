@@ -21,6 +21,11 @@ final class UDPPacket {
   static final int PKT_REQUEST = 4;
 
   /**
+   * Name of the task to referecence in case of a {@link MeasurementError}.
+   */
+  private final String taskName;
+
+  /**
    * Type of the {@link UDPPacket},
    * may be {@link UDPPacket#PKT_ERROR}, {@link UDPPacket#PKT_RESPONSE},
    * {@link UDPPacket#PKT_DATA}, or {@link UDPPacket#PKT_REQUEST}
@@ -58,7 +63,15 @@ final class UDPPacket {
    */
   public int packetNum;
 
-  public UDPPacket(int type, UDPBurstConfig config) {
+  /**
+   * Build from scratch an {@link UDPPacket} from the given configuration.
+   *
+   * @param taskName Name of the task to referecence in case of a {@link MeasurementError}
+   * @param type     Type of packet to build.
+   * @param config   Burst configuration to set in the packet.
+   */
+  public UDPPacket(String taskName, int type, UDPBurstConfig config) {
+    this.taskName = taskName;
     this.type = type;
     this.burstCount = config.getUdpBurstCount();
     this.packetSize = config.getPacketSizeByte();
@@ -74,10 +87,12 @@ final class UDPPacket {
   /**
    * Unpack received message and fill the structure
    *
-   * @param rawdata network message
+   * @param taskName Name of the task to referecence in case of a {@link MeasurementError}
+   * @param rawdata  Network message
    * @throws MeasurementError stream reader failed
    */
-  public UDPPacket(byte[] rawdata) throws MeasurementError {
+  public UDPPacket(String taskName, byte[] rawdata) throws MeasurementError {
+    this.taskName = taskName;
     ByteArrayInputStream byteIn = new ByteArrayInputStream(rawdata);
     DataInputStream dataIn = new DataInputStream(byteIn);
 
@@ -91,13 +106,13 @@ final class UDPPacket {
       seq = dataIn.readInt();
       udpInterval = dataIn.readInt();
     } catch (IOException e) {
-      throw new MeasurementError("Fetch payload failed! " + e.getMessage());
+      throw new MeasurementError(taskName, "Fetch payload failed! " + e.getMessage());
     }
 
     try {
       byteIn.close();
     } catch (IOException e) {
-      throw new MeasurementError("Error closing inputstream!");
+      throw new MeasurementError(taskName, "Error closing inputstream!");
     }
   }
 
@@ -127,7 +142,7 @@ final class UDPPacket {
       dataOut.writeInt(seq);
       dataOut.writeInt(udpInterval);
     } catch (IOException e) {
-      throw new MeasurementError("Create rawpacket failed! " + e.getMessage());
+      throw new MeasurementError(taskName, "Create rawpacket failed! " + e.getMessage());
     }
 
     byte[] rawPacket = byteOut.toByteArray();
@@ -135,7 +150,7 @@ final class UDPPacket {
     try {
       byteOut.close();
     } catch (IOException e) {
-      throw new MeasurementError("Error closing outputstream!");
+      throw new MeasurementError(taskName, "Error closing outputstream!");
     }
     return rawPacket;
   }

@@ -20,6 +20,7 @@ public class TracerouteTask extends Measurement {
   private ICMPConfig icmpConfig;
 
   public TracerouteTask(TracerouteConfig tracerouteConfig) {
+    super(TAG);
     this.config = tracerouteConfig;
     this.icmpConfig = new ICMPConfig(config.getUrl());
   }

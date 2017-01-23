@@ -4,6 +4,12 @@ package io.apisense.network;
  * Common measurement behavior.
  */
 public abstract class Measurement {
+  public final String taskName;
+
+  protected Measurement(String taskName) {
+    this.taskName = taskName;
+  }
+
   /**
    * Ensure that the measurement is called in an {@link android.os.AsyncTask}.
    *

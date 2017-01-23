@@ -27,7 +27,8 @@ public abstract class UDPBurstTask extends Measurement {
   protected UDPBurstConfig config;
 
 
-  public UDPBurstTask(UDPBurstConfig udpBurstConfig) {
+  public UDPBurstTask(String taskName, UDPBurstConfig udpBurstConfig) {
+    super(taskName);
     this.config = udpBurstConfig;
   }
 
@@ -51,7 +52,7 @@ public abstract class UDPBurstTask extends Measurement {
       throw new MeasurementError("Error reading from " + config.getTargetIp(), e);
     }
 
-    return new UDPPacket(recvpacket.getData());
+    return new UDPPacket(taskName, recvpacket.getData());
   }
 
   /**
@@ -73,5 +74,4 @@ public abstract class UDPBurstTask extends Measurement {
 
     return sock;
   }
-
 }

@@ -18,7 +18,7 @@ public class TCPDownloadTask extends TCPThroughputTask {
   private static final int PORT_DOWNLINK = 6001;
 
   public TCPDownloadTask(TCPThroughputConfig tcpThroughputConfig) {
-    super(tcpThroughputConfig);
+    super(TAG, tcpThroughputConfig);
   }
 
   /**
@@ -36,7 +36,7 @@ public class TCPDownloadTask extends TCPThroughputTask {
       retrieveData(tcpSocket);
       this.taskEndTime = System.currentTimeMillis();
     } catch (OutOfMemoryError e) { // TODO: See if this catch clause is really necessary
-      throw new MeasurementError("Detect out of memory at Downlink task.", e);
+      throw new MeasurementError(taskName, "Detect out of memory at Downlink task.", e);
     } finally {
       closeSocket(tcpSocket);
     }
@@ -64,7 +64,7 @@ public class TCPDownloadTask extends TCPThroughputTask {
         updateSize(read_bytes);
       } while (read_bytes >= 0);
     } catch (IOException e) {
-      throw new MeasurementError("Error to receive data from " + config.getTarget(), e);
+      throw new MeasurementError(taskName, "Error to receive data from " + config.getTarget(), e);
     } finally {
       closeStream(iStream);
     }

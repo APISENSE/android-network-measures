@@ -20,7 +20,7 @@ public class TCPUploadTask extends TCPThroughputTask {
   private static final long MB_TO_B = 1048576;
 
   public TCPUploadTask(TCPThroughputConfig tcpThroughputConfig) {
-    super(tcpThroughputConfig);
+    super(TAG, tcpThroughputConfig);
   }
 
   /**
@@ -40,7 +40,7 @@ public class TCPUploadTask extends TCPThroughputTask {
       oStream = tcpSocket.getOutputStream();
       iStream = tcpSocket.getInputStream();
     } catch (IOException e) {
-      throw new MeasurementError("Unable to open stream", e);
+      throw new MeasurementError(taskName, "Unable to open stream", e);
     }
 
 
@@ -52,7 +52,7 @@ public class TCPUploadTask extends TCPThroughputTask {
     try {
       retrieveResult(iStream);
     } catch (OutOfMemoryError e) { // TODO: See if this catch clause is really necessary
-      throw new MeasurementError("Detect out of memory during Uplink task.", e);
+      throw new MeasurementError(taskName, "Detect out of memory during Uplink task.", e);
     } finally {
       closeStream(oStream);
       closeStream(iStream);
@@ -77,7 +77,7 @@ public class TCPUploadTask extends TCPThroughputTask {
       resultMsgLen = iStream.read(resultMsg, 0, resultMsg.length);
       message = new String(resultMsg);
     } catch (IOException e) {
-      throw new MeasurementError("Unable to retrieve upload result", e);
+      throw new MeasurementError(taskName, "Unable to retrieve upload result", e);
     }
 
     if (!message.isEmpty() && resultMsgLen > 0) {
@@ -111,7 +111,7 @@ public class TCPUploadTask extends TCPThroughputTask {
       // send last message with special content
       sendMessageOnStream(TCPUploadTask.UPLINK_FINISH_MSG.getBytes(), oStream);
     } catch (IOException e) {
-      throw new MeasurementError("Unable to upload data", e);
+      throw new MeasurementError(taskName, "Unable to upload data", e);
     }
     return pktSizeSent;
   }

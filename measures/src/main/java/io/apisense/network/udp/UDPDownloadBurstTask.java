@@ -17,7 +17,7 @@ public class UDPDownloadBurstTask extends UDPBurstTask {
   public static final String TAG = "UDPDownloadBurst";
 
   public UDPDownloadBurstTask(UDPBurstConfig udpBurstConfig) {
-    super(udpBurstConfig);
+    super(TAG, udpBurstConfig);
   }
 
   /**
@@ -49,7 +49,7 @@ public class UDPDownloadBurstTask extends UDPBurstTask {
         pktRecv++;
         metricCalculator.addPacket(dataPacket.packetNum, dataPacket.timestamp);
       } else {
-        throw new MeasurementError("Error closing input stream from " + config.getTargetIp());
+        throw new MeasurementError(taskName, "Error closing input stream from " + config.getTargetIp());
       }
     }
     endTimeTask = System.currentTimeMillis();
@@ -69,11 +69,11 @@ public class UDPDownloadBurstTask extends UDPBurstTask {
    * @throws MeasurementError If any error occurred during measurement.
    */
   private void sendDownloadRequest(DatagramSocket sock) throws MeasurementError {
-    UDPPacket requestPacket = new UDPPacket(UDPPacket.PKT_REQUEST, this.config);
+    UDPPacket requestPacket = new UDPPacket(taskName, UDPPacket.PKT_REQUEST, this.config);
     try {
       sock.send(requestPacket.createDatagram(config.getTargetIp(), DEFAULT_PORT));
     } catch (IOException e) {
-      throw new MeasurementError("Error while sending download burst request on " + config.getTargetIp(), e);
+      throw new MeasurementError(taskName, "Error while sending download burst request on " + config.getTargetIp(), e);
     }
   }
 

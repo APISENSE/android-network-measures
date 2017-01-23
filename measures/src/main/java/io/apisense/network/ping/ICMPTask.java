@@ -19,27 +19,34 @@ import io.apisense.network.MeasurementError;
  */
 public class ICMPTask extends Measurement {
   public static final String TAG = "PING";
+
   private static final String REGEX_TTL_EXCEEDED = "icmp_seq=\\d+ Time to live exceeded";
   private static final String REGEX_SUCCESS = "icmp_seq=\\d+ ttl=\\d+ time=(\\d+.\\d+) ms";
+
   // Template:
   // From *ip*: icmp_seq=1 Time to live exceeded
   private static final Pattern PING_RESPONSE_TTL_EXCEEDED_NO_HOSTNAME = Pattern.compile(
       "From ([\\d.]+): " + REGEX_TTL_EXCEEDED);
+
   // Template:
   // 64 bytes from *ip*: icmp_seq=1 ttl=*ttl* time=*latency* ms
   private static final Pattern PING_RESPONSE_SUCCESS_NO_HOSTNAME = Pattern.compile(
       "\\d+ bytes from ([\\d.]+): " + REGEX_SUCCESS);
+
   // Template:
   // From *hostname* (*ip*): icmp_seq=1 Time to live exceeded
   private static final Pattern PING_RESPONSE_TTL_EXCEEDED = Pattern.compile(
       "From ([\\w\\d\\-.]+) \\(([\\d.]+)\\): " + REGEX_TTL_EXCEEDED);
+
   // Template:
   // 64 bytes from *hostname* (*ip*): icmp_seq=1 ttl=*ttl* time=*latency* ms
   private static final Pattern PING_RESPONSE_SUCCESS = Pattern.compile(
       "\\d+ bytes from ([\\w\\d\\-.]+) \\(([\\d.]+)\\): " + REGEX_SUCCESS);
+
   private ICMPConfig config;
 
   public ICMPTask(ICMPConfig config) {
+    super(TAG);
     this.config = config;
   }
 
@@ -131,7 +138,7 @@ public class ICMPTask extends Measurement {
       String command = generatePingCommand(config.getUrl(), config.getTtl());
       return launchPingCommand(command);
     } catch (PINGException | IOException | InterruptedException e) {
-      throw new MeasurementError(e);
+      throw new MeasurementError(taskName, e);
     }
   }
 

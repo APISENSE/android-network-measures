@@ -16,20 +16,25 @@ public class MeasurementExecutor extends AsyncTask<Measurement, Void, Measuremen
 
   @Override
   protected MeasurementResult doInBackground(Measurement... measurementTasks) {
-    for (Measurement task : measurementTasks) {
-      try {
-        return task.execute();
-      } catch (MeasurementError measurementError) {
-        this.error = measurementError;
-      }
+    if (measurementTasks.length == 0) {
+      this.error = new MeasurementError("None", "No task to run!");
+      return null;
     }
-    return null;
+
+    Measurement task = measurementTasks[0];
+    try {
+      return task.execute();
+    } catch (MeasurementError measurementError) {
+      this.error = measurementError;
+      long time = System.currentTimeMillis();
+      return new FailedMeasurementResult(task.taskName, time, time);
+    }
   }
 
   @Override
   protected void onPostExecute(MeasurementResult result) {
     super.onPostExecute(result);
-    if (hasError()) {
+    if (hasError() || result == null) {
       listener.onError(error);
     } else {
       listener.onResult(result);
