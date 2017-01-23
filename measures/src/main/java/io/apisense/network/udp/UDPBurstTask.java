@@ -14,64 +14,64 @@ import io.apisense.network.MeasurementError;
  * Abstract class containing common code used for UDP upload and download tests
  */
 public abstract class UDPBurstTask extends Measurement {
-    protected static final int DEFAULT_PORT = 31341;
+  protected static final int DEFAULT_PORT = 31341;
 
-    /**
-     * round-trip delay, in msec.
-     */
-    protected static final int RCV_TIMEOUT = 2000;
+  /**
+   * round-trip delay, in msec.
+   */
+  protected static final int RCV_TIMEOUT = 2000;
 
-    protected long startTimeTask; //time in milliseconds
-    protected long endTimeTask; //time in milliseconds
+  protected long startTimeTask; //time in milliseconds
+  protected long endTimeTask; //time in milliseconds
 
-    protected UDPBurstConfig config;
+  protected UDPBurstConfig config;
 
 
-    public UDPBurstTask(UDPBurstConfig udpBurstConfig) {
-        this.config = udpBurstConfig;
+  public UDPBurstTask(UDPBurstConfig udpBurstConfig) {
+    this.config = udpBurstConfig;
+  }
+
+  /**
+   * Wait for the socket to retrieve a response to the previous burst.
+   *
+   * @param sock The socket to listen through.
+   * @return An {@link UDPPacket} containing the response.
+   * @throws MeasurementError If any error occurred during measurement.
+   */
+  @NonNull
+  protected UDPPacket retrieveResponseDatagram(DatagramSocket sock) throws MeasurementError {
+    byte[] buffer = new byte[config.getPacketSizeByte()];
+    DatagramPacket recvpacket = new DatagramPacket(buffer, buffer.length);
+
+    try {
+      sock.receive(recvpacket);
+    } catch (SocketException e1) {
+      throw new MeasurementError("Timed out reading from " + config.getTargetIp(), e1);
+    } catch (IOException e) {
+      throw new MeasurementError("Error reading from " + config.getTargetIp(), e);
     }
 
-    /**
-     * Wait for the socket to retrieve a response to the previous burst.
-     *
-     * @param sock The socket to listen through.
-     * @return An {@link UDPPacket} containing the response.
-     * @throws MeasurementError If any error occurred during measurement.
-     */
-    @NonNull
-    protected UDPPacket retrieveResponseDatagram(DatagramSocket sock) throws MeasurementError {
-        byte[] buffer = new byte[config.getPacketSizeByte()];
-        DatagramPacket recvpacket = new DatagramPacket(buffer, buffer.length);
+    return new UDPPacket(recvpacket.getData());
+  }
 
-        try {
-            sock.receive(recvpacket);
-        } catch (SocketException e1) {
-            throw new MeasurementError("Timed out reading from " + config.getTargetIp(), e1);
-        } catch (IOException e) {
-            throw new MeasurementError("Error reading from " + config.getTargetIp(), e);
-        }
+  /**
+   * Opens a datagram (UDP) socket
+   *
+   * @return a datagram socket used for sending/receiving
+   * @throws MeasurementError if an error occurs
+   */
+  protected DatagramSocket openSocket() throws MeasurementError {
+    DatagramSocket sock;
 
-        return new UDPPacket(recvpacket.getData());
+    // Open datagram socket
+    try {
+      sock = new DatagramSocket();
+      sock.setSoTimeout(RCV_TIMEOUT);
+    } catch (SocketException e) {
+      throw new MeasurementError("Socket creation failed", e);
     }
 
-    /**
-     * Opens a datagram (UDP) socket
-     *
-     * @return a datagram socket used for sending/receiving
-     * @throws MeasurementError if an error occurs
-     */
-    protected DatagramSocket openSocket() throws MeasurementError {
-        DatagramSocket sock;
-
-        // Open datagram socket
-        try {
-            sock = new DatagramSocket();
-            sock.setSoTimeout(RCV_TIMEOUT);
-        } catch (SocketException e) {
-            throw new MeasurementError("Socket creation failed", e);
-        }
-
-        return sock;
-    }
+    return sock;
+  }
 
 }

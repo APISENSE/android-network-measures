@@ -9,30 +9,30 @@ import org.xbill.DNS.Type;
  */
 public class DNSRecord {
 
-    /**
-     * The recorded server name
-     */
-    public final String name;
+  /**
+   * The recorded server name
+   */
+  public final String name;
 
-    /**
-     * The Record Type as String
-     */
-    public final String type;
+  /**
+   * The Record Type as String
+   */
+  public final String type;
 
-    /**
-     * The Record Class as String
-     */
-    public final String dclass;
+  /**
+   * The Record Class as String
+   */
+  public final String dclass;
 
-    /**
-     * The recorded Time To Live
-     */
-    public final long ttl;
+  /**
+   * The recorded Time To Live
+   */
+  public final long ttl;
 
-    DNSRecord(Record record) {
-        name = record.getName().toString();
-        type = Type.string(record.getType());
-        dclass = DClass.string(record.getDClass());
-        ttl = record.getTTL();
-    }
+  DNSRecord(Record record) {
+    name = record.getName().toString();
+    type = Type.string(record.getType());
+    dclass = DClass.string(record.getDClass());
+    ttl = record.getTTL();
+  }
 }

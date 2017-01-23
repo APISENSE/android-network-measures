@@ -33,71 +33,6 @@ public class DNSLookupTask extends Measurement {
     this.config = config;
   }
 
-  @Override
-  public DNSLookupResult execute() throws MeasurementError {
-    Log.d(TAG, "Running DNS lookup with configuration: " + config);
-    Record question;
-    try {
-      question = Record.newRecord(Name.fromString(config.getTarget()),
-          Type.value(config.getQtype()), DClass.value(config.getQclass()));
-    } catch (TextParseException e) {
-      throw new MeasurementError("Error constructing packet", e);
-    }
-    Message query = Message.newQuery(question);
-    Log.v(TAG, "Constructed question: " + question);
-    Log.v(TAG, "Constructed query: " + query);
-    return sendMeasurement(query, config.isForceTCP());
-  }
-
-  /**
-   * Put the query on the wire and wait for responses.
-   *
-   * @param query    The DNS query to send to the server.
-   * @param forceTCP Tells whether we should force request to use TCP or not.
-   * @return The lookup result.
-   * @throws MeasurementError If anything goes wrong during DNS lookup.
-   */
-  @NonNull
-  private DNSLookupResult sendMeasurement(Message query, boolean forceTCP) throws MeasurementError {
-    byte[] output = query.toWire();
-    OPTRecord opt = query.getOPT();
-
-    int udpSize = opt != null ? opt.getPayloadSize() : 512;
-    boolean useTCP = forceTCP || (output.length > udpSize);
-    long timeout = System.currentTimeMillis() + config.getTimeout();
-
-    DNSClient client = connectClient(config.getServer(), useTCP, timeout);
-
-    // Sending request
-    long startTime;
-    do {
-      startTime = sendRequest(client, output);
-    } while (startTime == -1 && System.currentTimeMillis() < timeout);
-
-    // Retrieving result
-    byte[] respBytes;
-    do {
-      respBytes = receiveResponse(client, udpSize);
-    } while (respBytes.length == 0 && System.currentTimeMillis() < timeout);
-    long endTime = System.currentTimeMillis();
-
-    // Parsing response
-    DNSLookupResult result;
-    try {
-      result = DNSLookupResult.fromMessage(config, parseMessage(useTCP, respBytes), startTime, endTime);
-    } catch (TruncatedException e) {
-      Log.d(TAG, "UDP response truncated, re-querying over TCP");
-      try {
-        client.cleanup();
-      } catch (IOException err) {
-        Log.w(TAG, "Unable to clean client while retrying over TCP", e);
-      }
-      return sendMeasurement(query, true);
-    }
-
-    return result;
-  }
-
   /**
    * Parse the raw response bytes to a wrapped dns answer.
    *
@@ -123,7 +58,6 @@ public class DNSLookupTask extends Measurement {
     }
     return response;
   }
-
 
   /**
    * Initialize and connect the dns TCP or UDP client.
@@ -188,5 +122,70 @@ public class DNSLookupTask extends Measurement {
       Log.d(TAG, "Problem while receiving packet ", e);
     }
     return in;
+  }
+
+  @Override
+  public DNSLookupResult execute() throws MeasurementError {
+    Log.d(TAG, "Running DNS lookup with configuration: " + config);
+    Record question;
+    try {
+      question = Record.newRecord(Name.fromString(config.getTarget()),
+          Type.value(config.getQtype()), DClass.value(config.getQclass()));
+    } catch (TextParseException e) {
+      throw new MeasurementError("Error constructing packet", e);
+    }
+    Message query = Message.newQuery(question);
+    Log.v(TAG, "Constructed question: " + question);
+    Log.v(TAG, "Constructed query: " + query);
+    return sendMeasurement(query, config.isForceTCP());
+  }
+
+  /**
+   * Put the query on the wire and wait for responses.
+   *
+   * @param query    The DNS query to send to the server.
+   * @param forceTCP Tells whether we should force request to use TCP or not.
+   * @return The lookup result.
+   * @throws MeasurementError If anything goes wrong during DNS lookup.
+   */
+  @NonNull
+  private DNSLookupResult sendMeasurement(Message query, boolean forceTCP) throws MeasurementError {
+    byte[] output = query.toWire();
+    OPTRecord opt = query.getOPT();
+
+    int udpSize = opt != null ? opt.getPayloadSize() : 512;
+    boolean useTCP = forceTCP || (output.length > udpSize);
+    long timeout = System.currentTimeMillis() + config.getTimeout();
+
+    DNSClient client = connectClient(config.getServer(), useTCP, timeout);
+
+    // Sending request
+    long startTime;
+    do {
+      startTime = sendRequest(client, output);
+    } while (startTime == -1 && System.currentTimeMillis() < timeout);
+
+    // Retrieving result
+    byte[] respBytes;
+    do {
+      respBytes = receiveResponse(client, udpSize);
+    } while (respBytes.length == 0 && System.currentTimeMillis() < timeout);
+    long endTime = System.currentTimeMillis();
+
+    // Parsing response
+    DNSLookupResult result;
+    try {
+      result = DNSLookupResult.fromMessage(config, parseMessage(useTCP, respBytes), startTime, endTime);
+    } catch (TruncatedException e) {
+      Log.d(TAG, "UDP response truncated, re-querying over TCP");
+      try {
+        client.cleanup();
+      } catch (IOException err) {
+        Log.w(TAG, "Unable to clean client while retrying over TCP", e);
+      }
+      return sendMeasurement(query, true);
+    }
+
+    return result;
   }
 }

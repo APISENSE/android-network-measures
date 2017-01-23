@@ -5,11 +5,11 @@ package io.apisense.network;
  */
 
 public class MeasurementConfigException extends Exception {
-    public MeasurementConfigException(String reason) {
-        super(reason);
-    }
+  public MeasurementConfigException(String reason) {
+    super(reason);
+  }
 
-    public MeasurementConfigException(Exception cause) {
-        super(cause);
-    }
+  public MeasurementConfigException(Exception cause) {
+    super(cause);
+  }
 }

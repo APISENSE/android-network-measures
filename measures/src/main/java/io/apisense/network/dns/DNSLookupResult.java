@@ -17,34 +17,22 @@ import io.apisense.network.MeasurementResult;
 public class DNSLookupResult extends MeasurementResult {
 
   /**
-   * Report configuration used on this query.
-   */
-  private DNSLookupConfig configuration;
-
-  /**
    * DNS response code for the query.
    */
   private final String responseCode;
-
   /**
    * Is the response truncated?
    */
   private final boolean truncated;
-
+  /**
+   * Report configuration used on this query.
+   */
+  private DNSLookupConfig configuration;
   /**
    * List of the actual DNS records for the queried domain.
    */
   private List<DNSRecord> records;
 
-
-  static DNSLookupResult fromMessage(DNSLookupConfig config, Message response, long startTime, long endTime) {
-    return new DNSLookupResult(config,
-            startTime, endTime,
-        Rcode.string(response.getHeader().getRcode()),
-        response.getHeader().getFlag(Flags.TC),
-        Arrays.asList(response.getSectionArray(1))
-    );
-  }
 
   public DNSLookupResult(DNSLookupConfig configuration, long startTime, long endTime,
                          String rCode, boolean tc, List<Record> records) {
@@ -53,9 +41,18 @@ public class DNSLookupResult extends MeasurementResult {
     this.responseCode = rCode;
     this.truncated = tc;
     this.records = new ArrayList<>();
-    for (Record record: records) {
+    for (Record record : records) {
       this.records.add(new DNSRecord(record));
     }
+  }
+
+  static DNSLookupResult fromMessage(DNSLookupConfig config, Message response, long startTime, long endTime) {
+    return new DNSLookupResult(config,
+        startTime, endTime,
+        Rcode.string(response.getHeader().getRcode()),
+        response.getHeader().getFlag(Flags.TC),
+        Arrays.asList(response.getSectionArray(1))
+    );
   }
 
   public DNSLookupConfig getConfiguration() {

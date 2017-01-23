@@ -14,67 +14,67 @@ import io.apisense.network.MeasurementResult;
  * Measures the jitter, the jitter, the loss, and the number of out of order packets in download
  */
 public class UDPDownloadBurstTask extends UDPBurstTask {
-    public static final String TAG = "UDPDownloadBurst";
+  public static final String TAG = "UDPDownloadBurst";
 
-    public UDPDownloadBurstTask(UDPBurstConfig udpBurstConfig) {
-        super(udpBurstConfig);
+  public UDPDownloadBurstTask(UDPBurstConfig udpBurstConfig) {
+    super(udpBurstConfig);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @return A {@link UDPBurstResult} object containing information on the UDP download burst.
+   * @throws MeasurementError {@inheritDoc}
+   */
+  public MeasurementResult execute() throws MeasurementError {
+    MetricCalculator metricCalculator = new MetricCalculator();
+    DatagramSocket sock = openSocket();
+
+    startTimeTask = System.currentTimeMillis();
+    UDPPacket dataPacket;
+    int pktRecv = 0;
+
+    sendDownloadRequest(sock);
+
+    for (int i = 0; i < config.getUdpBurstCount(); i++) {
+      try {
+        dataPacket = retrieveResponseDatagram(sock);
+      } catch (MeasurementError e) {
+        Log.w(TAG, e);
+        break;
+      }
+
+      if (dataPacket.type == UDPPacket.PKT_DATA) {
+        Log.v(TAG, "Received packed n°" + dataPacket.packetNum);
+        pktRecv++;
+        metricCalculator.addPacket(dataPacket.packetNum, dataPacket.timestamp);
+      } else {
+        throw new MeasurementError("Error closing input stream from " + config.getTargetIp());
+      }
     }
+    endTimeTask = System.currentTimeMillis();
+    sock.close();
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return A {@link UDPBurstResult} object containing information on the UDP download burst.
-     * @throws MeasurementError {@inheritDoc}
-     */
-    public MeasurementResult execute() throws MeasurementError {
-        MetricCalculator metricCalculator = new MetricCalculator();
-        DatagramSocket sock = openSocket();
+    double outOfOrderRatio = metricCalculator.calculateOutOfOrderRatio();
+    long jitter = metricCalculator.calculateJitter();
+    int lostCount = config.getUdpBurstCount() - pktRecv;
+    return new UDPBurstResult(TAG, this.startTimeTask, this.endTimeTask, config,
+        pktRecv, lostCount, outOfOrderRatio, jitter);
+  }
 
-        startTimeTask = System.currentTimeMillis();
-        UDPPacket dataPacket;
-        int pktRecv = 0;
-
-        sendDownloadRequest(sock);
-
-        for (int i = 0; i < config.getUdpBurstCount(); i++) {
-            try {
-                dataPacket = retrieveResponseDatagram(sock);
-            } catch (MeasurementError e) {
-                Log.w(TAG, e);
-                break;
-            }
-
-            if (dataPacket.type == UDPPacket.PKT_DATA) {
-                Log.v(TAG, "Received packed n°" + dataPacket.packetNum);
-                pktRecv++;
-                metricCalculator.addPacket(dataPacket.packetNum, dataPacket.timestamp);
-            } else {
-                throw new MeasurementError("Error closing input stream from " + config.getTargetIp());
-            }
-        }
-        endTimeTask = System.currentTimeMillis();
-        sock.close();
-
-        double outOfOrderRatio = metricCalculator.calculateOutOfOrderRatio();
-        long jitter = metricCalculator.calculateJitter();
-        int lostCount = config.getUdpBurstCount() - pktRecv;
-        return new UDPBurstResult(TAG, this.startTimeTask, this.endTimeTask, config,
-                pktRecv, lostCount, outOfOrderRatio, jitter);
+  /**
+   * Send a request packet to download with UDP.
+   *
+   * @param sock The socket to send packets through.
+   * @throws MeasurementError If any error occurred during measurement.
+   */
+  private void sendDownloadRequest(DatagramSocket sock) throws MeasurementError {
+    UDPPacket requestPacket = new UDPPacket(UDPPacket.PKT_REQUEST, this.config);
+    try {
+      sock.send(requestPacket.createDatagram(config.getTargetIp(), DEFAULT_PORT));
+    } catch (IOException e) {
+      throw new MeasurementError("Error while sending download burst request on " + config.getTargetIp(), e);
     }
-
-    /**
-     * Send a request packet to download with UDP.
-     *
-     * @param sock The socket to send packets through.
-     * @throws MeasurementError If any error occurred during measurement.
-     */
-    private void sendDownloadRequest(DatagramSocket sock) throws MeasurementError {
-        UDPPacket requestPacket = new UDPPacket(UDPPacket.PKT_REQUEST, this.config);
-        try {
-            sock.send(requestPacket.createDatagram(config.getTargetIp(), DEFAULT_PORT));
-        } catch (IOException e) {
-            throw new MeasurementError("Error while sending download burst request on " + config.getTargetIp(), e);
-        }
-    }
+  }
 
 }

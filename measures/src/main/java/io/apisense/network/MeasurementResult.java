@@ -15,7 +15,7 @@ public abstract class MeasurementResult {
   private final long startTime;
 
   /**
-   *  Time of the end of the task in milliseconds
+   * Time of the end of the task in milliseconds
    */
   private final long endTime;
 
@@ -24,7 +24,7 @@ public abstract class MeasurementResult {
    */
   private final long duration;
 
-  protected MeasurementResult(String taskName, long startTime, long endTime){
+  protected MeasurementResult(String taskName, long startTime, long endTime) {
     this.taskName = taskName;
     this.startTime = startTime;
     this.endTime = endTime;
@@ -50,10 +50,10 @@ public abstract class MeasurementResult {
   @Override
   public String toString() {
     return "MeasurementResult{" +
-            "taskName='" + taskName + '\'' +
-            ", startTime=" + startTime +
-            ", endTime=" + endTime +
-            ", duration=" + duration +
-            '}';
+        "taskName='" + taskName + '\'' +
+        ", startTime=" + startTime +
+        ", endTime=" + endTime +
+        ", duration=" + duration +
+        '}';
   }
 }
