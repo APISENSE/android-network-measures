@@ -47,9 +47,9 @@ public abstract class UDPBurstTask extends Measurement {
     try {
       sock.receive(recvpacket);
     } catch (SocketException e1) {
-      throw new MeasurementError("Timed out reading from " + config.getTargetIp(), e1);
+      throw new MeasurementError(taskName, "Timed out reading from " + config.getTargetIp(), e1);
     } catch (IOException e) {
-      throw new MeasurementError("Error reading from " + config.getTargetIp(), e);
+      throw new MeasurementError(taskName, "Error reading from " + config.getTargetIp(), e);
     }
 
     return new UDPPacket(taskName, recvpacket.getData());
@@ -69,7 +69,7 @@ public abstract class UDPBurstTask extends Measurement {
       sock = new DatagramSocket();
       sock.setSoTimeout(RCV_TIMEOUT);
     } catch (SocketException e) {
-      throw new MeasurementError("Socket creation failed", e);
+      throw new MeasurementError(taskName, "Socket creation failed", e);
     }
 
     return sock;

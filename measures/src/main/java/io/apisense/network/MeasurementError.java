@@ -17,7 +17,6 @@ public class MeasurementError extends Exception {
   }
 
   public MeasurementError(String taskName, Exception e) {
-    super(e);
-    this.taskName = taskName;
+    this(taskName, e.getMessage(), e);
   }
 }

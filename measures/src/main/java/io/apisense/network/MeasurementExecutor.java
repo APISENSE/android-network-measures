@@ -26,15 +26,14 @@ public class MeasurementExecutor extends AsyncTask<Measurement, Void, Measuremen
       return task.execute();
     } catch (MeasurementError measurementError) {
       this.error = measurementError;
-      long time = System.currentTimeMillis();
-      return new FailedMeasurementResult(task.taskName, time, time);
+      return null;
     }
   }
 
   @Override
   protected void onPostExecute(MeasurementResult result) {
     super.onPostExecute(result);
-    if (hasError() || result == null) {
+    if (hasError()) {
       listener.onError(error);
     } else {
       listener.onResult(result);
