@@ -1,7 +1,6 @@
 package io.apisense.network;
 
 
-import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -25,7 +24,7 @@ import java.util.List;
  *
  * @see <a href="https://www.measurementlab.net/">https://www.measurementlab.net/</a>
  */
-public class MLabNS extends AsyncTask<Void, Void, List<String>> {
+public class MLabNS implements Runnable {
   private static final String TAG = "MLabNS";
   private static final String MLAB_URL = "http://mlab-ns.appspot.com/mobiperf?format=json";
   private static final String IP_FIELD = "ip";
@@ -35,14 +34,19 @@ public class MLabNS extends AsyncTask<Void, Void, List<String>> {
     this.callback = listener;
   }
 
+
+  @Override
+  public void run() {
+    callback.onMLabFinished(retrieveMLabIPs());
+  }
+
   /**
    * Returns an {@link List} containing IPV4/IPV6 addresses of MLab server to run a
-   * TCP or UDP Test
+   * TCP or UDP Test.
    *
    * @return List of IP addresses to run TCP/UDP tests
    */
-  @Override
-  protected List<String> doInBackground(Void... voids) {
+  public static List<String> retrieveMLabIPs() {
     ArrayList<String> mlabNSResult = new ArrayList<>();
     String response;
     HttpURLConnection con = null;
@@ -88,7 +92,7 @@ public class MLabNS extends AsyncTask<Void, Void, List<String>> {
    * @throws IOException If the stream interaction fails.
    */
   @NonNull
-  private String getResponseString(InputStream inputStream) throws IOException {
+  private static String getResponseString(InputStream inputStream) throws IOException {
     BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
     String inputLine;
     StringBuffer response = new StringBuffer();
@@ -108,7 +112,7 @@ public class MLabNS extends AsyncTask<Void, Void, List<String>> {
    * @return The list of available IPs.
    */
   @NonNull
-  private List<String> retrieveIps(String response) {
+  private static List<String> retrieveIps(String response) {
     List<String> result = new ArrayList<>();
     try {
       JSONObject json = new JSONObject(response);
@@ -130,11 +134,6 @@ public class MLabNS extends AsyncTask<Void, Void, List<String>> {
       throw new InvalidParameterException(e.getMessage());
     }
     return result;
-  }
-
-  @Override
-  protected void onPostExecute(List<String> result) {
-    callback.onMLabFinished(result);
   }
 }
 

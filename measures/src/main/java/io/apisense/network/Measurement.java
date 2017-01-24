@@ -1,5 +1,8 @@
 package io.apisense.network;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
  * Common measurement behavior.
  */
@@ -11,13 +14,14 @@ public abstract class Measurement {
   }
 
   /**
-   * Ensure that the measurement is called in an {@link android.os.AsyncTask}.
+   * Ensure that the measurement is asynchronously called in an {@link ExecutorService}.
    *
    * @param callback The {@link MeasurementCallback} used
    *                 for reporting success or failure of this measurement.
    */
   public final void call(MeasurementCallback callback) {
-    new MeasurementExecutor(callback).execute(this);
+    ExecutorService executorService = Executors.newSingleThreadExecutor();
+    executorService.submit(new MeasurementExecutor(this, callback));
   }
 
   /**
