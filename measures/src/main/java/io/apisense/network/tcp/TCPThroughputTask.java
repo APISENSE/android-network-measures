@@ -37,7 +37,8 @@ abstract class TCPThroughputTask extends Measurement {
   protected long dataConsumedAfterSlowStart = 0;
   List<Double> samplingResults = new ArrayList<>();
 
-  TCPThroughputTask(TCPThroughputConfig tcpThroughputConfig) {
+  TCPThroughputTask(String taskName, TCPThroughputConfig tcpThroughputConfig) {
+    super(taskName);
     config = tcpThroughputConfig;
   }
 
@@ -50,7 +51,7 @@ abstract class TCPThroughputTask extends Measurement {
       tcpSocket.setTcpNoDelay(true);
       return tcpSocket;
     } catch (IOException e) {
-      throw new MeasurementError("Error opening socket at " + hostname + ":" + portNum, e);
+      throw new MeasurementError(taskName, "Error opening socket at " + hostname + ":" + portNum, e);
     }
   }
 

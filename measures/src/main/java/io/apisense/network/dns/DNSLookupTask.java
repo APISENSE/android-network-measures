@@ -30,6 +30,7 @@ public class DNSLookupTask extends Measurement {
   private final DNSLookupConfig config;
 
   public DNSLookupTask(DNSLookupConfig config) {
+    super(TAG);
     this.config = config;
   }
 
@@ -43,7 +44,7 @@ public class DNSLookupTask extends Measurement {
    * @throws TruncatedException If the response is truncated while client is using UDP.
    */
   @NonNull
-  private static Message parseMessage(boolean useTCP, byte[] respBytes)
+  private Message parseMessage(boolean useTCP, byte[] respBytes)
       throws TruncatedException, MeasurementError {
     Message response;
     try {
@@ -54,7 +55,7 @@ public class DNSLookupTask extends Measurement {
         throw new TruncatedException();
       }
     } catch (IOException e) {
-      throw new MeasurementError("Problem trying to parse dns packet", e);
+      throw new MeasurementError(taskName, "Problem trying to parse dns packet", e);
     }
     return response;
   }
@@ -69,7 +70,7 @@ public class DNSLookupTask extends Measurement {
    * @throws MeasurementError If any error occurred during client creation or connection.
    */
   @NonNull
-  private static DNSClient connectClient(String server, boolean useTCP, long endTime)
+  private DNSClient connectClient(String server, boolean useTCP, long endTime)
       throws MeasurementError {
     DNSClient client;
     try {
@@ -82,7 +83,7 @@ public class DNSLookupTask extends Measurement {
       SocketAddress addr = new InetSocketAddress(server, 53);
       client.connect(addr);
     } catch (IOException e) {
-      throw new MeasurementError("Error while creating client", e);
+      throw new MeasurementError(taskName, "Error while creating client", e);
     }
     Log.d(TAG, "Initialized client");
     return client;

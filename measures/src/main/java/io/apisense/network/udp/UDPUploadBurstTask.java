@@ -17,7 +17,7 @@ public class UDPUploadBurstTask extends UDPBurstTask {
   private static final String TAG = "UDPUploadBurst";
 
   public UDPUploadBurstTask(UDPBurstConfig udpBurstConfig) {
-    super(udpBurstConfig);
+    super(TAG, udpBurstConfig);
   }
 
   /**
@@ -34,7 +34,7 @@ public class UDPUploadBurstTask extends UDPBurstTask {
 
     // Send burst
     for (int i = 0; i < config.getUdpBurstCount(); i++) {
-      dataPacket = new UDPPacket(UDPPacket.PKT_DATA, this.config);
+      dataPacket = new UDPPacket(taskName, UDPPacket.PKT_DATA, this.config);
       dataPacket.packetNum = i;
 
       // Flatten UDP packet
@@ -42,7 +42,7 @@ public class UDPUploadBurstTask extends UDPBurstTask {
         sock.send(dataPacket.createDatagram(config.getTargetIp(), DEFAULT_PORT));
       } catch (IOException e) {
         sock.close();
-        throw new MeasurementError("Error while sending upload burst on " + config.getTargetIp(), e);
+        throw new MeasurementError(taskName, "Error while sending upload burst on " + config.getTargetIp(), e);
       }
 
       // Sleep udpInterval millisecond
@@ -84,7 +84,7 @@ public class UDPUploadBurstTask extends UDPBurstTask {
       return new UDPBurstResult(TAG, this.startTimeTask, this.endTimeTask, config,
           packetCount, lostCount, outOfOrderRatio, jitter);
     } else {
-      throw new MeasurementError("Error: not a response packet! seq: " + responsePacket.seq);
+      throw new MeasurementError(taskName, "Error: not a response packet! seq: " + responsePacket.seq);
     }
   }
 }

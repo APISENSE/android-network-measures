@@ -20,13 +20,18 @@ public class TracerouteTask extends Measurement {
   private ICMPConfig icmpConfig;
 
   public TracerouteTask(TracerouteConfig tracerouteConfig) {
+    super(TAG);
     this.config = tracerouteConfig;
     this.icmpConfig = new ICMPConfig(config.getUrl());
   }
 
   @Override
   public MeasurementResult execute() throws MeasurementError {
-    destIp = new ICMPTask(icmpConfig).execute().getIp();
+    try {
+      destIp = new ICMPTask(icmpConfig).execute().getIp();
+    } catch (MeasurementError error) {
+      throw new MeasurementError(taskName, "Could not determine destination IP", error);
+    }
 
     long taskStartTime = System.currentTimeMillis();
     ArrayList<ICMPResult> traces = new ArrayList<>();
@@ -41,12 +46,9 @@ public class TracerouteTask extends Measurement {
       icmpConfig.setTtl(currentTtl);
       hop = new ICMPTask(icmpConfig).execute();
       Log.v(TAG, "A new ICMPResult : " + hop);
-      if (hop != null) {
-        traces.add(hop);
-      }
+      traces.add(hop);
     } catch (MeasurementError e) {
-      Log.e(TAG, "Error on ICMPResult (dst: " + config.getUrl() + ", ttl: " + currentTtl + "): "
-          + e.getMessage(), e);
+      Log.w(TAG, "Error on ICMPResult (dst: " + config.getUrl() + ", ttl: " + currentTtl + ")", e);
     } finally {
       if (notThereYet(hop, currentTtl)) {
         traceroute(currentTtl + 1, traces);

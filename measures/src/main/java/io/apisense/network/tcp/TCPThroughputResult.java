@@ -15,11 +15,13 @@ public final class TCPThroughputResult extends MeasurementResult {
   private final TCPThroughputConfig config;
 
   /**
-   * Contains the number of bytes received or sent depending of the kind of test, for each sample period, ordered in ascending order
+   * Contains the number of bytes received or sent depending of the kind of test,
+   * for each sample period, ordered in ascending order
    */
   private final List<Double> tcpSpeedResults;
+
   /**
-   * Median throughput in
+   * Median throughput of all tests in bytes.
    */
   private final double medianThroughput;
 
@@ -33,7 +35,7 @@ public final class TCPThroughputResult extends MeasurementResult {
     this.config = config;
     this.usedData = dataConsumedAfterSlowStart;
     this.tcpSpeedResults = Collections.unmodifiableList(tcpSpeedResults);
-    medianThroughput = computeMedianSpeedPerSecond();
+    this.medianThroughput = tcpSpeedResults.isEmpty() ? 0 : computeMedianSpeedPerSecond();
   }
 
   public TCPThroughputConfig getConfig() {

@@ -1,42 +1,24 @@
 package io.apisense.network;
 
-import android.os.AsyncTask;
-
 /**
  * Asynchronous task executing the given measurement tasks,
  * and calling the given {@link MeasurementCallback} for each returned success or error.
  */
-public class MeasurementExecutor extends AsyncTask<Measurement, Void, MeasurementResult> {
+public class MeasurementExecutor implements Runnable {
+  private final Measurement task;
   private final MeasurementCallback listener;
-  private MeasurementError error;
 
-  public MeasurementExecutor(MeasurementCallback listener) {
+  public MeasurementExecutor(Measurement task, MeasurementCallback listener) {
+    this.task = task;
     this.listener = listener;
   }
 
   @Override
-  protected MeasurementResult doInBackground(Measurement... measurementTasks) {
-    for (Measurement task : measurementTasks) {
-      try {
-        return task.execute();
-      } catch (MeasurementError measurementError) {
-        this.error = measurementError;
-      }
-    }
-    return null;
-  }
-
-  @Override
-  protected void onPostExecute(MeasurementResult result) {
-    super.onPostExecute(result);
-    if (hasError()) {
+  public void run() {
+    try {
+      listener.onResult(task.execute());
+    } catch (MeasurementError error) {
       listener.onError(error);
-    } else {
-      listener.onResult(result);
     }
-  }
-
-  private boolean hasError() {
-    return error != null;
   }
 }

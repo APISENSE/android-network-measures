@@ -23,11 +23,6 @@ public class TCPThroughputConfig {
   private int dataLimitMbUp = 7;
 
   /**
-   * Data limit for download in Mb
-   */
-  private int dataLimitMbDown = 10;
-
-  /**
    * Size of a single packet in bytes
    */
   private int pktSizeUpBytes = 700;
@@ -70,14 +65,6 @@ public class TCPThroughputConfig {
 
   public void setDataLimitMbUp(int dataLimitMbUp) {
     this.dataLimitMbUp = dataLimitMbUp;
-  }
-
-  public int getDataLimitMbDown() {
-    return dataLimitMbDown;
-  }
-
-  public void setDataLimitMbDown(int dataLimitMbDown) {
-    this.dataLimitMbDown = dataLimitMbDown;
   }
 
   public int getPktSizeUpBytes() {

@@ -19,30 +19,53 @@ import io.apisense.network.MeasurementError;
  */
 public class ICMPTask extends Measurement {
   public static final String TAG = "PING";
+
   private static final String REGEX_TTL_EXCEEDED = "icmp_seq=\\d+ Time to live exceeded";
   private static final String REGEX_SUCCESS = "icmp_seq=\\d+ ttl=\\d+ time=(\\d+.\\d+) ms";
-  // Template:
-  // From *ip*: icmp_seq=1 Time to live exceeded
+
+  /**
+   * Template: From *ip*: icmp_seq=1 Time to live exceeded
+   */
   private static final Pattern PING_RESPONSE_TTL_EXCEEDED_NO_HOSTNAME = Pattern.compile(
       "From ([\\d.]+): " + REGEX_TTL_EXCEEDED);
-  // Template:
-  // 64 bytes from *ip*: icmp_seq=1 ttl=*ttl* time=*latency* ms
+
+  /**
+   * Template:
+   * 64 bytes from *ip*: icmp_seq=1 ttl=*ttl* time=*latency* ms
+   */
   private static final Pattern PING_RESPONSE_SUCCESS_NO_HOSTNAME = Pattern.compile(
       "\\d+ bytes from ([\\d.]+): " + REGEX_SUCCESS);
-  // Template:
-  // From *hostname* (*ip*): icmp_seq=1 Time to live exceeded
+
+  /**
+   * Template:
+   * From *hostname* (*ip*): icmp_seq=1 Time to live exceeded
+   */
   private static final Pattern PING_RESPONSE_TTL_EXCEEDED = Pattern.compile(
       "From ([\\w\\d\\-.]+) \\(([\\d.]+)\\): " + REGEX_TTL_EXCEEDED);
-  // Template:
-  // 64 bytes from *hostname* (*ip*): icmp_seq=1 ttl=*ttl* time=*latency* ms
+
+  /**
+   * Template:
+   * 64 bytes from *hostname* (*ip*): icmp_seq=1 ttl=*ttl* time=*latency* ms
+   */
   private static final Pattern PING_RESPONSE_SUCCESS = Pattern.compile(
       "\\d+ bytes from ([\\w\\d\\-.]+) \\(([\\d.]+)\\): " + REGEX_SUCCESS);
+
+  /**
+   * This message is displayed when all packets are lost.
+   *
+   * Template:
+   * 1 packets transmitted, 0 received, 100% packet loss, time 0ms
+   */
+  private static final Pattern PING_RESPONSE_TIMEOUT = Pattern.compile(
+      "\\d+ packets transmitted, 0 received, 100% packet loss, time \\d+ms"
+  );
+
   private ICMPConfig config;
 
   public ICMPTask(ICMPConfig config) {
+    super(TAG);
     this.config = config;
   }
-
 
   /**
    * *Synchronous* Ping request with a specific ttl.
@@ -65,7 +88,7 @@ public class ICMPTask extends Measurement {
    * @throws IOException
    * @throws InterruptedException
    */
-  private ICMPResult launchPingCommand(String command) throws ICMPTask.PINGException, IOException, InterruptedException {
+  private ICMPResult launchPingCommand(String command) throws PINGException, IOException, InterruptedException {
     Log.d(TAG, "Will launch : " + command);
     long startTime = System.currentTimeMillis();
     Process p = Runtime.getRuntime().exec(command);
@@ -86,7 +109,7 @@ public class ICMPTask extends Measurement {
    * @return The built result from output.
    * @throws IOException
    */
-  private ICMPResult parsePingResponse(BufferedReader stdin, long startTimeMs) throws IOException {
+  private ICMPResult parsePingResponse(BufferedReader stdin, long startTimeMs) throws IOException, PINGException {
     String hostname;
     String ip;
     long endTime = System.currentTimeMillis();
@@ -121,26 +144,35 @@ public class ICMPTask extends Measurement {
         latency = Float.valueOf(matcher.group(2)).longValue(); // milliseconds
         return new ICMPResult(startTimeMs, endTime, config, null, ip, latency, currentTtl);
       }
+      matcher = PING_RESPONSE_TIMEOUT.matcher(line);
+      if (matcher.matches()) {
+        throw new PINGException("Packet is lost");
+      }
     }
-    return null;
+    throw new PINGException("Could not parse response");
   }
 
   @Override
+  @NonNull
   public ICMPResult execute() throws MeasurementError {
     try {
       String command = generatePingCommand(config.getUrl(), config.getTtl());
       return launchPingCommand(command);
     } catch (PINGException | IOException | InterruptedException e) {
-      throw new MeasurementError(e);
+      throw new MeasurementError(taskName, e);
     }
   }
 
   /**
    * Exception thrown from a PING task
    */
-  public static class PINGException extends Exception {
+  private static class PINGException extends Exception {
     PINGException(InputStream errorStream) {
       super(buildErrorMessage(errorStream));
+    }
+
+    PINGException(String message) {
+      super(message);
     }
 
     @NonNull
