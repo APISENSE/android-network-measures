@@ -35,4 +35,14 @@ public class DNSRecord {
     dclass = DClass.string(record.getDClass());
     ttl = record.getTTL();
   }
+
+  @Override
+  public String toString() {
+    return "DNSRecord{" +
+        "name='" + name + '\'' +
+        ", type='" + type + '\'' +
+        ", dclass='" + dclass + '\'' +
+        ", ttl=" + ttl +
+        '}';
+  }
 }
