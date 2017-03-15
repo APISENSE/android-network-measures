@@ -31,13 +31,19 @@ public final class ICMPResult extends MeasurementResult {
    */
   private final int ttl;
 
-  ICMPResult(long startTime, long endTime, ICMPConfig config, String hostname, String ip, long ping, int ttl) {
+  /**
+   * Round-trip time of the ping
+   */
+  private final Rtt rtt;
+
+  ICMPResult(long startTime, long endTime, ICMPConfig config, String hostname, String ip, long ping, int ttl, Rtt rtt) {
     super(ICMPTask.TAG, startTime, endTime);
     this.config = config;
     this.hostname = hostname;
     this.ip = ip;
     this.ping = ping;
     this.ttl = ttl;
+    this.rtt = rtt;
   }
 
   public ICMPConfig getConfig() {
@@ -60,6 +66,10 @@ public final class ICMPResult extends MeasurementResult {
     return ttl;
   }
 
+  public Rtt getRtt() {
+    return rtt;
+  }
+
   @Override
   public String toString() {
     return "ICMPResult{" +
@@ -68,6 +78,7 @@ public final class ICMPResult extends MeasurementResult {
         ", ip='" + ip + '\'' +
         ", ping=" + ping +
         ", ttl=" + ttl +
+        ", rtt=" + rtt +
         "} " + super.toString();
   }
 }

@@ -22,6 +22,7 @@ public class ICMPTask extends Measurement {
 
   private static final String REGEX_TTL_EXCEEDED = "icmp_seq=\\d+ Time to live exceeded";
   private static final String REGEX_SUCCESS = "icmp_seq=\\d+ ttl=\\d+ time=(\\d+.\\d+) ms";
+  private static final String REGEX_RTT_SUCCESS = "(\\d+.\\d+)/(\\d+.\\d+)/(\\d+.\\d+)/(\\d+.\\d+) ms";
 
   /**
    * Template: From *ip*: icmp_seq=1 Time to live exceeded
@@ -49,6 +50,13 @@ public class ICMPTask extends Measurement {
    */
   private static final Pattern PING_RESPONSE_SUCCESS = Pattern.compile(
       "\\d+ bytes from ([\\w\\d\\-.]+) \\(([\\d.]+)\\): " + REGEX_SUCCESS);
+
+  /**
+   * Template:
+   * round-trip min/avg/max/stddev = *rtt.min*\/*rtt.avg*\/*rtt.max*\/0.114 ms
+   */
+  private static final Pattern PING_RESPONSE_RTT_SUCCESS = Pattern.compile(
+      "rtt min/avg/max/mdev = " + REGEX_RTT_SUCCESS);
 
   /**
    * This message is displayed when all packets are lost.
@@ -110,45 +118,69 @@ public class ICMPTask extends Measurement {
    * @throws IOException
    */
   private ICMPResult parsePingResponse(BufferedReader stdin, long startTimeMs) throws IOException, PINGException {
-    String hostname;
-    String ip;
+    String hostname = null;
+    String ip = null;
+    Rtt rtt;
     long endTime = System.currentTimeMillis();
     long latency = endTime - startTimeMs;
     int currentTtl = config.getTtl();
 
     String line;
     Matcher matcher;
+
     while ((line = stdin.readLine()) != null) {
       Log.d(TAG, "Parsing line : " + line);
+
       matcher = PING_RESPONSE_TTL_EXCEEDED.matcher(line);
+
       if (matcher.matches()) {
         hostname = matcher.group(1);
         ip = matcher.group(2);
-        return new ICMPResult(startTimeMs, endTime, config, hostname, ip, latency, currentTtl);
+        return new ICMPResult(startTimeMs, endTime, config, hostname, ip, latency, currentTtl, null);
       }
+
       matcher = PING_RESPONSE_TTL_EXCEEDED_NO_HOSTNAME.matcher(line);
+
       if (matcher.matches()) {
         ip = matcher.group(1);
-        return new ICMPResult(startTimeMs, endTime, config, null, ip, latency, currentTtl);
+        return new ICMPResult(startTimeMs, endTime, config, null, ip, latency, currentTtl, null);
       }
+
       matcher = PING_RESPONSE_SUCCESS.matcher(line);
+
       if (matcher.matches()) {
         hostname = matcher.group(1);
         ip = matcher.group(2);
         latency = Float.valueOf(matcher.group(3)).longValue(); // milliseconds
-        return new ICMPResult(startTimeMs, endTime, config, hostname, ip, latency, currentTtl);
       }
+
       matcher = PING_RESPONSE_SUCCESS_NO_HOSTNAME.matcher(line);
+
       if (matcher.matches()) {
         ip = matcher.group(1);
         latency = Float.valueOf(matcher.group(2)).longValue(); // milliseconds
-        return new ICMPResult(startTimeMs, endTime, config, null, ip, latency, currentTtl);
       }
+
+      matcher = PING_RESPONSE_RTT_SUCCESS.matcher(line);
+
+      if (matcher.matches()) {
+        float min = Float.valueOf(matcher.group(1));
+        float avg = Float.valueOf(matcher.group(2));
+        float max = Float.valueOf(matcher.group(3));
+        float mdev = Float.valueOf(matcher.group(4));
+
+        rtt = new Rtt(min, avg, max, mdev);
+
+        return new ICMPResult(startTimeMs, endTime, config, hostname, ip, latency, currentTtl, rtt);
+      }
+
       matcher = PING_RESPONSE_TIMEOUT.matcher(line);
+
       if (matcher.matches()) {
         throw new PINGException("Packet is lost");
       }
     }
+
     throw new PINGException("Could not parse response");
   }
 
