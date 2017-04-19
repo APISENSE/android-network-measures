@@ -37,12 +37,7 @@ public class UDPDownloadBurstTask extends UDPBurstTask {
     sendDownloadRequest(sock);
 
     for (int i = 0; i < config.getUdpBurstCount(); i++) {
-      try {
-        dataPacket = retrieveResponseDatagram(sock);
-      } catch (MeasurementError e) {
-        Log.w(TAG, e);
-        break;
-      }
+      dataPacket = retrieveResponseDatagram(sock);
 
       if (dataPacket.type == UDPPacket.PKT_DATA) {
         Log.v(TAG, "Received packed n°" + dataPacket.packetNum);
