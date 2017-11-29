@@ -1,3 +1,5 @@
+[![Maven Central](https://img.shields.io/maven-central/v/io.apisense.network/android-network-measures.svg)](http://search.maven.org/#artifactdetails%7Cio.apisense.network%7Candroid-network-measures%7C1.1.2%7Caar)
+
 # Android Network measures
 
 We aim to provide a minimalistic library to perform network measures on Android. 
